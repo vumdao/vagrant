@@ -14,8 +14,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.provision:shell, inline: <<-SHELL
         echo "root:rootroot" | sudo chpasswd
         sudo timedatectl set-timezone Asia/Ho_Chi_Minh
-        sudo wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-        sudo echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
     SHELL
     config.vm.provision:shell, path: "bootstrap.sh"
 
