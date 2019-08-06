@@ -30,7 +30,7 @@ install_postgresql() {
     sudo printf "\nhost    all             all             127.0.0.1/32            trust\n" >> /etc/postgresql/9.5/main/pg_hba.conf
     sudo printf "\nhost    all             all             all                     md5\n" >> /etc/postgresql/9.5/main/pg_hba.conf
     sudo printf "\nlisten_addresses = '*'" >> /etc/postgresql/9.5/main/postgresql.conf
-    sudo printf "\nhost    replication     replicator      $other_ip/32      md5\n" /etc/postgresql/9.5/main/pg_hba.conf
+    sudo printf "\nhost    replication     replicator      $other_ip/32      md5\n" >> /etc/postgresql/9.5/main/pg_hba.conf
     sudo service postgresql restart
 
     step "===== Changing pasword ====="
