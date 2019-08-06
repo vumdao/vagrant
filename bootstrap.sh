@@ -7,14 +7,14 @@ step() {
     step=$((step+1))
 }
 
-sleep 5
-
-step "===== Ensure the network is ready ====="
-ping -c 3 8.8.8.8
+resolve_dns() {
+    step "===== Create symlink to /run/systemd/resolve/resolv.conf ====="
+    sudo rm /etc/resolv.conf
+    sudo ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
+}
 
 install_postgresql() {
     step "===== Installing postgresql ====="
-    sudo apt-get update
     sudo wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
     sudo echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
     sudo apt-get update
@@ -74,10 +74,51 @@ EOF
     sudo -u postgres psql < /tmp/user
 }
 
+replica_setup() {
+    step "===== Setup replication configuration ====="
+    sudo -u postgres echo -e "
+wal_level = hot_standby
+wal_log_hints = on
+archive_mode = on
+archive_command = 'test ! -f /vagrant/replica/%f && cp %p /vagrant/replica/%f'
+max_wal_senders = 2
+wal_keep_segments = 1000
+hot_standby = on" >> /etc/postgresql/9.5/main/postgresql.conf
+}
+
+create_recover_temp() {
+	step "===== create_recover_temp ====="
+	sudo -u postgres echo -e "
+standby_mode = 'on'
+primary_conninfo = 'user=replicator password=rootroot host=NODE_IP port=5432 sslmode=prefer sslcompression=0 krbsrvname=postgres target_session_attrs=any'
+recovery_target_timeline = 'latest'
+restore_command = 'cp /vagrant/replica/%f %p'
+archive_cleanup_command = 'pg_archivecleanup /vagrant/replica %r'
+trigger_file = '/tmp/pg-trigger-failover-now'" >> /var/lib/postgresql/9.5/main/recovery.conf.temp
+}
+
+setup_welcome_msg() {
+    sudo apt-get -y install cowsay
+    sudo echo -e "\n echo \"Welcome to Vagrant Postgres Ubuntu 18.04\" | cowsay\n" >> /home/vagrant/.bashrc
+    sudo ln -s /usr/games/cowsay /usr/local/bin/cowsay
+}
+
+postgres_bashrc() {
+    bashrc="/var/lib/postgresql/.bashrc"
+    sudo -u postgres echo "alias pgconf=\"cd /etc/postgresql/9.5/main\"" >> $bashrc
+    sudo -u postgres echo "alias pgdir=\"cd /var/lib/postgresql/9.5/main\"" >> $bashrc
+    sudo -u postgres echo -e "\n echo \"Hey! I'm postgres user\" | cowsay -f apt\n" >> $bashrc
+}
+
 main() {
+    resolve_dns
     install_postgresql
     install_pgbouncer
     create_replicator_user
+    replica_setup
+	create_recover_temp
+    setup_welcome_msg
+    postgres_bashrc
 }
 
 main

@@ -1,0 +1,47 @@
+# Archiving (https://www.postgresql.org/docs/9.5/runtime-config-wal.html)
+- archive_mode (enum)
+- archive_command (string)
+- archive_timeout (integer)
+
+# Continuos archiving: https://www.postgresql.org/docs/9.5/continuous-archiving.html
+
+# Restart PostgreSQL
+/usr/lib/postgresql/9.5/bin/pg_ctl -D /var/lib/postgresql/9.5/main/ restart 
+
+# Start backup
+pg_basebackup -h 192.168.121.219 -U replicator -p 5432 -D /vagrant/replica -P -Xs -R
+
+# show replication
+SELECT * FROM pg_stat_replication;
+
+
+On Master
+==========
+$ ps -eaf | grep sender
+
+postgres=# \x
+Expanded display is on.
+postgres=# select * from pg_stat_replication;
+
+On Slave
+==========
+$ ps -eaf | grep receiver
+$ ps -eaf | grep startup
+
+# Backup & Recovery
+max_wal_size
+checkpoint_timeout
+wal_keep_segments
+pg_resetxlog
+
+Logical backup, using pg_dump
+
+DDL refers to "Data Definition Language"
+
+# Sample database
+curl -L -O http://cl.ly/173L141n3402/download/example.dump
+createdb pgguide
+pg_restore --no-owner --dbname pgguide example.dump
+psql --dbname pgguide
+
+(http://f.cl.ly/items/2p2W3e2y3p0T362w3t0R/Screenshot%2012:14:12%2012:37%20PM.png)
