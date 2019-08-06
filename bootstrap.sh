@@ -1,6 +1,11 @@
 #!/bin/bash
 # Bootstrap machine
 
+other_ip="192.168.121.211"
+if [ "$(hostname)" == "node2" ]; then
+    other_ip="192.168.121.210"
+fi
+
 step=1
 step() {
     echo "Step $step $1"
@@ -25,6 +30,7 @@ install_postgresql() {
     sudo printf "\nhost    all             all             127.0.0.1/32            trust\n" >> /etc/postgresql/9.5/main/pg_hba.conf
     sudo printf "\nhost    all             all             all                     md5\n" >> /etc/postgresql/9.5/main/pg_hba.conf
     sudo printf "\nlisten_addresses = '*'" >> /etc/postgresql/9.5/main/postgresql.conf
+    sudo printf "\nhost    replication     replicator      $other_ip/32      md5\n" /etc/postgresql/9.5/main/pg_hba.conf
     sudo service postgresql restart
 
     step "===== Changing pasword ====="
@@ -76,7 +82,7 @@ EOF
 
 replica_setup() {
     step "===== Setup replication configuration ====="
-    sudo -u postgres echo -e "
+    sudo echo -e "
 wal_level = hot_standby
 wal_log_hints = on
 archive_mode = on
@@ -87,10 +93,10 @@ hot_standby = on" >> /etc/postgresql/9.5/main/postgresql.conf
 }
 
 create_recover_temp() {
-	step "===== create_recover_temp ====="
-	sudo -u postgres echo -e "
+    step "===== create_recover_temp ====="
+    sudo -u postgres echo -e "
 standby_mode = 'on'
-primary_conninfo = 'user=replicator password=rootroot host=NODE_IP port=5432 sslmode=prefer sslcompression=0 krbsrvname=postgres target_session_attrs=any'
+primary_conninfo = 'user=replicator password=rootroot host=${other_ip} port=5432 sslmode=prefer sslcompression=0 krbsrvname=postgres target_session_attrs=any'
 recovery_target_timeline = 'latest'
 restore_command = 'cp /vagrant/replica/%f %p'
 archive_cleanup_command = 'pg_archivecleanup /vagrant/replica %r'
@@ -116,7 +122,7 @@ main() {
     install_pgbouncer
     create_replicator_user
     replica_setup
-	create_recover_temp
+    create_recover_temp
     setup_welcome_msg
     postgres_bashrc
 }
