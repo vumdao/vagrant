@@ -15,7 +15,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         echo "root:rootroot" | sudo chpasswd
         sudo timedatectl set-timezone Asia/Ho_Chi_Minh
     SHELL
-    config.vm.provision:shell, path: "bootstrap.sh"
 
     config.vm.define "node1" do |node1|
         node1.vm.hostname = "node1"
@@ -26,4 +25,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         node2.vm.hostname = "node2"
         node2.vm.network "private_network", ip: "192.168.121.211"
     end
+
+    config.vm.provision:shell, path: "bootstrap.sh"
 end

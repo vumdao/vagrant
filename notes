@@ -45,3 +45,11 @@ pg_restore --no-owner --dbname pgguide example.dump
 psql --dbname pgguide
 
 (http://f.cl.ly/items/2p2W3e2y3p0T362w3t0R/Screenshot%2012:14:12%2012:37%20PM.png)
+
+# pg_stat_statements
+# postgresql.conf
+shared_preload_libraries = 'pg_stat_statements'
+
+pg_stat_statements.max = 10000
+pg_stat_statements.track = all
+

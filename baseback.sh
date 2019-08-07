@@ -15,6 +15,6 @@ run_cmd "sudo rm -rf /var/lib/postgresql/9.5/main/*"
 
 run_cmd "sudo -u postgres tar xf /tmp/backup.tar -C /var/lib/postgresql/9.5/main/"
 
-run_cmd "sudo cp /var/lib/postgresql/9.5/main/recovery.conf.temp /var/lib/postgresql/9.5/main/recovery.conf"
+run_cmd "sudo cp /var/lib/postgresql/9.5/recovery.conf.temp /var/lib/postgresql/9.5/main/recovery.conf"
 
 run_cmd "sudo systemctl start postgresql"

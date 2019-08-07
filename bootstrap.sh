@@ -1,9 +1,21 @@
 #!/bin/bash
 # Bootstrap machine
 
-other_ip="192.168.121.211"
+ensure_netplan_apply() {
+    # First node up assign dhcp IP for eth1, not base on netplan yml
+    sleep 5
+    sudo netplan apply
+}
+
 if [ "$(hostname)" == "node2" ]; then
     other_ip="192.168.121.210"
+else
+    other_ip="192.168.121.211"
+fi
+echo "hostname: $(hostname) other_ip: $other_ip"
+
+if [ "$(hostname)" == "node2" ]; then
+    sleep 5
 fi
 
 step=1
@@ -20,7 +32,12 @@ resolve_dns() {
 
 install_postgresql() {
     step "===== Installing postgresql ====="
-    sudo wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+    while :; do
+        sudo wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+        if [ $? -eq 0 ]; then
+            break
+        fi
+    done
     sudo echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
     sudo apt-get update
     sudo apt-get -y install postgresql-9.5 
@@ -85,27 +102,28 @@ replica_setup() {
     sudo echo -e "
 wal_level = hot_standby
 wal_log_hints = on
-archive_mode = on
-archive_command = 'test ! -f /vagrant/replica/%f && cp %p /vagrant/replica/%f'
-max_wal_senders = 2
+max_wal_senders = 3
 wal_keep_segments = 1000
 hot_standby = on" >> /etc/postgresql/9.5/main/postgresql.conf
+    sudo systemctl restart postgresql
 }
 
 create_recover_temp() {
     step "===== create_recover_temp ====="
-    sudo -u postgres echo -e "
-standby_mode = 'on'
+    sudo -u postgres echo -e "standby_mode = 'on'
 primary_conninfo = 'user=replicator password=rootroot host=${other_ip} port=5432 sslmode=prefer sslcompression=0 krbsrvname=postgres target_session_attrs=any'
 recovery_target_timeline = 'latest'
-restore_command = 'cp /vagrant/replica/%f %p'
-archive_cleanup_command = 'pg_archivecleanup /vagrant/replica %r'
-trigger_file = '/tmp/pg-trigger-failover-now'" >> /var/lib/postgresql/9.5/main/recovery.conf.temp
+trigger_file = '/tmp/pg-trigger-failover-now'" >> /var/lib/postgresql/9.5/recovery.conf.temp
+}
+
+install_tools() {
+    sudo apt install -y python-dev libsqlite3-dev binutils python3-pip curl libxml2-utils python-crypto python-paramiko python python-yaml
 }
 
 setup_welcome_msg() {
     sudo apt-get -y install cowsay
-    sudo echo -e "\n echo \"Welcome to Vagrant Postgres Ubuntu 18.04\" | cowsay\n" >> /home/vagrant/.bashrc
+    sudo echo -e "\nalias postgres='sudo su postgres'\n" >> /home/vagrant/.bashrc
+    sudo echo -e "\necho \"Welcome to Vagrant Postgres Ubuntu 18.04\" | cowsay\n" >> /home/vagrant/.bashrc
     sudo ln -s /usr/games/cowsay /usr/local/bin/cowsay
 }
 
@@ -117,12 +135,14 @@ postgres_bashrc() {
 }
 
 main() {
+    ensure_netplan_apply
     resolve_dns
     install_postgresql
-    install_pgbouncer
+    #install_pgbouncer
     create_replicator_user
     replica_setup
     create_recover_temp
+    #install_tools
     setup_welcome_msg
     postgres_bashrc
 }
