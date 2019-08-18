@@ -51,7 +51,7 @@ install_postgresql() {
     sudo service postgresql restart
 
     step "===== Changing pasword ====="
-    sudo -u postgres psql postgres -c "ALTER USER postgres WITH ENCRYPTED PASSWORD 'postgres'"
+    sudo -u postgres psql postgres -c "ALTER USER postgres WITH ENCRYPTED PASSWORD 'rootroot'"
 }
 
 install_pgbouncer() {
@@ -62,7 +62,7 @@ install_pgbouncer() {
 
     step "===== Config pgbouncer: Add userlist ====="
     cd /etc/pgbouncer
-    sudo cat > config_pgbouncer <<EOF
+    sudo cat > config_pgbouncer.sql <<EOF
 COPY (
 SELECT '"' || rolname || '" "' ||
 CASE WHEN rolpassword IS null THEN '' ELSE rolpassword END || '"'
@@ -71,8 +71,8 @@ FROM pg_authid
 TO '/etc/pgbouncer/userlist.txt';
 EOF
 
-    sudo chmod 777 config_pgbouncer
-    sudo -u postgres psql < config_pgbouncer
+    sudo chmod 777 config_pgbouncer.sql
+    sudo -u postgres psql < config_pgbouncer.sql
 
     step "===== Config pgbouncer: Update pgbouncer.ini ====="
     sudo chmod 777 pgbouncer.ini
@@ -88,13 +88,13 @@ EOF
 
 create_replicator_user() {
     step "===== Create replicator user for nodes ====="
-    sudo cat > /tmp/user <<EOF
+    sudo cat > /tmp/user.sql <<EOF
 CREATE USER replicator
 WITH REPLICATION
 ENCRYPTED PASSWORD 'rootroot';
 EOF
-    sudo chmod 777 /tmp/user
-    sudo -u postgres psql < /tmp/user
+    sudo chmod 777 /tmp/user.sql
+    sudo -u postgres psql < /tmp/user.sql
 }
 
 replica_setup() {
@@ -117,13 +117,16 @@ trigger_file = '/tmp/pg-trigger-failover-now'" >> /var/lib/postgresql/9.5/recove
 }
 
 install_tools() {
-    sudo apt install -y python-dev libsqlite3-dev binutils python3-pip curl libxml2-utils python-crypto python-paramiko python python-yaml
+    sudo apt install -y python-dev libsqlite3-dev binutils python3-pip curl libxml2-utils python-crypto python-paramiko python python-yaml libpq-dev
+    pip install --user psycopg2
+    pip install --user config
 }
 
 setup_welcome_msg() {
     sudo apt-get -y install cowsay
     sudo echo -e "\nalias postgres='sudo su postgres'\n" >> /home/vagrant/.bashrc
-    sudo echo -e "\necho \"Welcome to Vagrant Postgres Ubuntu 18.04\" | cowsay\n" >> /home/vagrant/.bashrc
+    version=`sudo cat /etc/os-release | grep -i version_id | cut -d= -f2 | tr -d \"`
+    sudo echo -e "\necho \"Welcome to Vagrant Postgres Ubuntu $version\" | cowsay\n" >> /home/vagrant/.bashrc
     sudo ln -s /usr/games/cowsay /usr/local/bin/cowsay
 }
 
