@@ -1,0 +1,1 @@
+{"9p":{"/vagrant":{"disabled":false,"guestpath":"/vagrant","hostpath":"/home/vudao/workspace/vagrant/server/shared","type":"9p","accessmode":"mapped","__vagrantfile":true,"target":"/vagrant","mount":true,"readonly":null,"mount_tag":"14cf17e229b90ead2e2722cc3cc72b6"}}}

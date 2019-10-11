@@ -1,0 +1,23 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+    config.vm.provider :libvirt do |libvirt|
+        libvirt.driver = "kvm"
+    end
+    config.vm.synced_folder './shared', '/vagrant', type: '9p', disabled: false, accessmode: "mapped"
+    config.vm.box = "generic/ubuntu1804"
+    config.vm.box_version = "1.9.20"
+    config.vm.provision:shell, inline: <<-SHELL
+        echo "root:rootroot" | sudo chpasswd
+        sudo timedatectl set-timezone Asia/Ho_Chi_Minh
+    SHELL
+
+    config.vm.define "ubuntu18.04" do |ubuntu|
+        ubuntu.vm.hostname = "ubuntu18.04"
+    end
+
+    config.vm.provision:shell, path: "bootstrap.sh"
+end
