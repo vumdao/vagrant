@@ -1,10 +1,10 @@
 <p align="center">
   <a href="https://dev.to/vumdao">
-    <img alt="Launch a multi-node cluster using Vagrant and KVM" src="https://github.com/vumdao/vagrant/blob/master/kube/cover.png?raw=true" width="500" />
+    <img alt="Launch A Multi-node Kubernetes Cluster Using Vagrant And KVM" src="https://github.com/vumdao/vagrant/blob/master/kube/cover.png?raw=true" width="500" />
   </a>
 </p>
 <h1 align="center">
-  <div><b>Launch a multi-node cluster using Vagrant and KVM</b></div>
+  <div><b>Launch A Multi-node Kubernetes Cluster Using Vagrant And KVM</b></div>
 </h1>
 
 ---
