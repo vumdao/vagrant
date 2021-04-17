@@ -8,21 +8,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         libvirt.driver = "kvm"
     end
     config.vm.synced_folder './shared', '/vagrant', type: '9p', disabled: false, accessmode: "mapped"
-    config.vm.box = "generic/ubuntu1804"
-    config.vm.box_version = "1.9.20"
+    config.vm.box = "generic/ubuntu2004"
+    config.vm.box_version = "3.0.6"
     config.vm.network "forwarded_port", guest: 5432, host: 5432
     config.vm.provision:shell, inline: <<-SHELL
         echo "root:rootroot" | sudo chpasswd
         sudo timedatectl set-timezone Asia/Ho_Chi_Minh
     SHELL
-
-    config.vm.define "master" do |kube1|
-        kube1.vm.hostname = "master"
-        kube1.vm.network "private_network", ip: "192.168.121.210"
-        kube1.vm.provision:shell, inline: <<-SHELL
-            sudo echo -e "192.168.121.210\tmaster" >> /etc/hosts
-        SHELL
-    end
 
     config.vm.define "kube1" do |kube1|
         kube1.vm.hostname = "kube1"
@@ -30,15 +22,26 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         kube1.vm.provision:shell, inline: <<-SHELL
             sudo echo -e "192.168.121.211\tkube1" >> /etc/hosts
         SHELL
+        kube1.vm.provision:shell, path: "kube-bootstrap.sh"
     end
 
     config.vm.define "kube2" do |kube2|
         kube2.vm.hostname = "kube2"
         kube2.vm.network "private_network", ip: "192.168.121.212"
-        kube1.vm.provision:shell, inline: <<-SHELL
+        kube2.vm.provision:shell, inline: <<-SHELL
             sudo echo -e "192.168.121.212\tkube2" >> /etc/hosts
         SHELL
+        kube2.vm.provision:shell, path: "kube-bootstrap.sh"
     end
 
-    config.vm.provision:shell, path: "kube-bootstrap.sh"
+    config.vm.define "master" do |master|
+        master.vm.hostname = "master"
+        master.vm.network "private_network", ip: "192.168.121.210"
+        master.vm.provision:shell, inline: <<-SHELL
+            sudo sed -i 's/127\.0\.1\.1.*master//' /etc/hosts
+            sudo echo -e "192.168.121.210\tmaster" >> /etc/hosts
+        SHELL
+        master.vm.provision:shell, path: "kube-bootstrap.sh"
+	master.vm.provision:shell, path: "kubeadm_reinstall.sh"
+    end
 end

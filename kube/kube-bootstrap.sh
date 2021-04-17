@@ -24,7 +24,7 @@ install_docker() {
     sudo apt update
     sudo apt install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
     sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
     sudo apt update
     sudo apt install -y docker-ce docker-ce-cli containerd.io
     sudo groupadd docker
@@ -35,6 +35,7 @@ install_docker() {
 install_kube() {
     step "===== Installing kube ====="
     sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+    sudo apt update
     sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
     sudo apt install -y kubeadm
     sudo swapoff -a
@@ -54,7 +55,7 @@ setup_welcome_msg() {
     sudo apt -y install cowsay
     sudo echo -e "\necho \"Welcome to Vagrant Kube Ubuntu 18.04\" | cowsay\n" >> /home/vagrant/.bashrc
     sudo ln -s /usr/games/cowsay /usr/local/bin/cowsay
-    sudo apt install -y tcl expect
+    sudo apt install -y tcl expect net-tools
 }
 
 main() {
