@@ -1,0 +1,15 @@
+# curl <worker_ip>
+apiVersion: v1
+kind: Service
+metadata:
+  name: wappip
+  labels:
+    app: wappip
+spec:
+  externalIPs:
+  - 192.168.121.211
+  ports:
+  - name: "80"
+    port: 80
+  selector:
+    app: wappip

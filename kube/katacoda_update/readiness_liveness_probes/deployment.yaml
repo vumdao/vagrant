@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: frontend
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: katacoda/docker-http-server:health
+
+        resources:
+          requests:
+            memory: "1000Mi"
+            cpu: "200m"
+          limits:
+            memory: "3000Mi"
+            cpu: "1000m"
+
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 1
+          failureThreshold: 3
+          timeoutSeconds: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bad-frontend
+  name: bad-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bad-frontend
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: bad-frontend
+    spec:
+      containers:
+      - name: bad-frontend
+        image: katacoda/docker-http-server:unhealthy
+
+        resources:
+          requests:
+            memory: "1000Mi"
+            cpu: "200m"
+          limits:
+            memory: "3000Mi"
+            cpu: "1000m"
+
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 1
+          failureThreshold: 3
+          timeoutSeconds: 1

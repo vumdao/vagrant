@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: msql
+spec:
+  serviceName: "msql"
+  replicas: 1
+  selector:
+    matchLabels:
+      ss: msql
+  template:
+    metadata:
+      labels:
+        ss: msql
+    spec:
+      containers:
+      - name: mysql
+        image: openshift/mysql-55-centos7
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: yourpassword
+          - name: MYSQL_USER
+            value: wp_user
+          - name: MYSQL_PASSWORD
+            value: wp_pass
+          - name: MYSQL_DATABASE
+            value: wp_db
+        ports:
+          - containerPort: 3306
+            name: mysql
+        volumeMounts:
+          - name: mysql-persistent-storage
+            mountPath: /var/lib/mysql/data
+      restartPolicy: Always
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-persistent-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: www
+spec:
+  serviceName: "www"
+  replicas: 1
+  selector:
+    matchLabels:
+      ss: www
+  template:
+    metadata:
+      labels:
+        ss: www
+    spec:
+      containers:
+      - name: www
+        image: nginx:alpine
+        ports:
+          - containerPort: 80
+            name: www
+        volumeMounts:
+          - name: www-persistent-storage
+            mountPath: /usr/share/nginx/html
+      restartPolicy: Always
+  volumeClaimTemplates:
+  - metadata:
+      name: www-persistent-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

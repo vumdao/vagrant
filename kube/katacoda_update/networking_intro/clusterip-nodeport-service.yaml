@@ -1,0 +1,15 @@
+# curl <worker_ip>:30080
+apiVersion: v1
+kind: Service
+metadata:
+  name: wappip
+  labels:
+    app: wappip
+spec:
+  type: NodePort
+  ports:
+  - name: "80"
+    port: 80
+    nodePort: 30080
+  selector:
+    app: wappip

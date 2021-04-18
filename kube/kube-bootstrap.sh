@@ -43,11 +43,17 @@ install_kube() {
     sudo echo "source <(kubeadm completion bash)" >> /home/vagrant/.bashrc
 }
 
+setup_nfs() {
+    step "===== Installing nfs-server in case of testing NFS ====="
+    sudo apt install -y nfs-kernel-server
+}
+
 setup_root_login() {
     step "===== Setup root login ====="
     sudo sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
     sudo systemctl restart ssh
     sudo echo "root:rootroot" | chpasswd
+    sudo echo "vagrant:rootroot" | chpasswd
 }
 
 setup_welcome_msg() {

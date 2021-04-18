@@ -20,7 +20,7 @@
 
 ### 🚀 **[Create Vagrantfile](#-Create-Vagrantfile)**
 
-**Following is to create 1 master + 2 slaves (libvirt driver KVM)**
+**Following is to create 1 master + 2 slaves (libvirt driver KVM) and a shared folder between nodes which mounted to `/vagrant`**
 ```
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
